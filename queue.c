@@ -79,7 +79,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
     if (head && head->next) {
         element_t *removed_element = list_first_entry(head, element_t, list);
         strncpy(sp, removed_element->value, bufsize);
-        head->next = removed_element->list.next;
+        list_del(&removed_element->list);
         return removed_element;
     }
     return NULL;
