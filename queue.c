@@ -40,7 +40,7 @@ bool q_insert_head(struct list_head *head, char *s)
     if (node) {
         node->value = malloc(sizeof(char) * (strlen(s) + 1));
         if (node->value) {
-            strlcpy(node->value, s, (strlen(s) + 1));
+            strncpy(node->value, s, (strlen(s) + 1));
             list_add(&node->list, head);
             return true;
         } else {
