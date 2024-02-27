@@ -143,14 +143,13 @@ void q_swap(struct list_head *head)
 {
     if (head && head->next != head && head->next->next != head) {
         struct list_head *newhead = head->next->next;
-        list_move_tail(head->next->next, head);
-        list_move_tail(head->next, head);
-        while (head->next != newhead && head->next->next != newhead) {
+        do {
             list_move_tail(head->next->next, head);
             list_move_tail(head->next, head);
-        }
-        if (head->next != newhead)
+        } while (head->next != newhead && head->next->next != newhead);
+        if (head->next != newhead) {
             list_move_tail(head->next, head);
+        }
     }
 }
 
