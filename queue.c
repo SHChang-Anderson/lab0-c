@@ -156,9 +156,11 @@ void q_swap(struct list_head *head)
 /* Reverse elements in queue */
 void q_reverse(struct list_head *head)
 {
-    struct list_head *node, *safe;
-    list_for_each_safe (node, safe, head) {
-        list_move(node, head);
+    if (head) {
+        struct list_head *node, *safe;
+        list_for_each_safe (node, safe, head) {
+            list_move(node, head);
+        }
     }
 }
 
