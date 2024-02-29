@@ -169,38 +169,6 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
-void merge(struct list_head *l1, struct list_head *l2)
-{
-    if (!l1 || !l2)
-        return;
-    printf("l1'l1\n");
-    q_size(l1);
-    q_size(l2);
-    struct list_head tmp_head;
-    INIT_LIST_HEAD(&tmp_head);
-
-    while (l1->next != l1 && l2->next != l2) {
-        if (strcmp(list_first_entry(l1->next, element_t, list)->value,
-                   list_first_entry(l2->next, element_t, list)->value) < 0) {
-            struct list_head *tmp1 = l1->next;
-            list_move_tail(tmp1, &tmp_head);
-        } else {
-            struct list_head *tmp2 = l2->next;
-            list_move_tail(tmp2, &tmp_head);
-        }
-    }
-
-
-    list_splice_tail_init(l1, &tmp_head);
-
-
-    list_splice_tail_init(l2, &tmp_head);
-
-    printf("qsize()");
-    q_size(&tmp_head);
-    list_splice_tail(&tmp_head, l2);
-}
-
 int q_merge_two(struct list_head *first, struct list_head *second, bool descend)
 {
     if (!first || !second)
@@ -223,6 +191,34 @@ int q_merge_two(struct list_head *first, struct list_head *second, bool descend)
     list_splice_tail_init(second, &temp_head);
     list_splice(&temp_head, first);
     return size;
+}
+
+void mergeSortList(struct list_head *head, bool descend)
+{
+    // merge sort
+    if (list_is_singular(head)) {
+        return;
+    }
+
+    struct list_head *fast = head->next->next;
+    struct list_head *slow = head->next;
+    struct list_head newhead;
+    INIT_LIST_HEAD(&newhead);
+
+    // split list
+    while (fast != head && fast->next != head) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    list_cut_position(&newhead, head, slow);
+
+    // sort each list
+    mergeSortList(&newhead, descend);
+    mergeSortList(head, descend);
+
+    // merge sorted lists
+    q_merge_two(head, &newhead, descend);
 }
 
 
