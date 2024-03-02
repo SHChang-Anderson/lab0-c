@@ -76,9 +76,10 @@ bool q_insert_tail(struct list_head *head, char *s)
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (head && head->next) {
+    if (head && !list_empty(head)) {
         element_t *removed_element = list_first_entry(head, element_t, list);
-        strncpy(sp, removed_element->value, bufsize);
+        strncpy(sp, removed_element->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
         list_del(&removed_element->list);
         return removed_element;
     }
@@ -88,9 +89,10 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (head && head->next) {
+    if (head && !list_empty(head)) {
         element_t *removed_element = list_last_entry(head, element_t, list);
-        strncpy(sp, removed_element->value, bufsize);
+        strncpy(sp, removed_element->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
         list_del(&removed_element->list);
         return removed_element;
     }
@@ -252,6 +254,9 @@ void mergeSortList(struct list_head *head, bool descend)
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
     mergeSortList(head, descend);
 }
 
