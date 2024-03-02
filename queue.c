@@ -134,6 +134,33 @@ bool q_delete_mid(struct list_head *head)
 /* Delete all nodes that have duplicate string */
 bool q_delete_dup(struct list_head *head)
 {
+    if (list_is_singular(head))
+        return 0;
+    struct list_head *node, *safe, *cur;
+    char *cmp_str = list_entry(head->next, element_t, list)->value;
+    cur = head->next;
+    bool need_del = 0;
+    list_for_each_safe (node, safe, head) {
+        if (node != head->next) {
+            if (!strcmp(list_entry(node, element_t, list)->value, cmp_str)) {
+                list_del_init(node);
+                q_release_element(list_entry(node, element_t, list));
+                need_del = 1;
+            } else {
+                if (need_del) {
+                    list_del(cur);
+                    q_release_element(list_entry(cur, element_t, list));
+                    need_del = 0;
+                }
+                cmp_str = list_entry(node, element_t, list)->value;
+                cur = node;
+            }
+        }
+    }
+    if (need_del) {
+        list_del(cur);
+        q_release_element(list_entry(cur, element_t, list));
+    }
     return true;
 }
 
@@ -276,6 +303,21 @@ int q_descend(struct list_head *head)
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
-    // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+    if (!head || list_empty(head)) {
+        return 0;
+    }
+    if (list_is_singular(head)) {
+        return list_entry(head->next, queue_contex_t, chain)->size;
+    }
+    queue_contex_t *merged_list = list_entry(head->next, queue_contex_t, chain);
+    struct list_head *node = NULL, *safe = NULL;
+    list_for_each_safe (node, safe, head) {
+        if (node == head->next) {
+            continue;
+        }
+        queue_contex_t *temp = list_entry(node, queue_contex_t, chain);
+        list_splice_init(temp->q, merged_list->q);
+    }
+    q_sort(merged_list->q, 0);
+    return merged_list->size;
 }
