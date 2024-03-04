@@ -23,6 +23,7 @@
 #include "list.h"
 #include "list_sort.h"
 #include "random.h"
+#include "shuffle.h"
 
 /* Shannon entropy */
 extern double shannon_entropy(const uint8_t *input_data);
@@ -855,6 +856,30 @@ static bool do_reverseK(int argc, char *argv[])
     return !error_check();
 }
 
+static bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q) {
+        report(3, "Warning: Try to access null queue");
+        return false;
+    }
+    error_check();
+
+    set_noallocate_mode(true);
+    if (exception_setup(true))
+        q_shuffle(current->q);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+
+    q_show(3);
+    return !error_check();
+}
+
 static bool do_merge(int argc, char *argv[])
 {
     if (argc != 1) {
@@ -1088,6 +1113,7 @@ static void console_init()
     ADD_COMMAND(reverse, "Reverse queue", "");
     ADD_COMMAND(sort, "Sort queue in ascending/descening order", "");
     ADD_COMMAND(lsort, "Use Linux kernel sorting algorithm", "");
+    ADD_COMMAND(shuffle, "shuffle", "");
     ADD_COMMAND(size, "Compute queue size n times (default: n == 1)", "[n]");
     ADD_COMMAND(show, "Show queue contents", "");
     ADD_COMMAND(dm, "Delete middle node in queue", "");
