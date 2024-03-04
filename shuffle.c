@@ -1,9 +1,9 @@
+#include "shuffle.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
 #include "queue.h"
-#include "shuffle.h"
 
 void q_shuffle(struct list_head *head)
 {
@@ -13,11 +13,12 @@ void q_shuffle(struct list_head *head)
     struct list_head *new = head->prev;
     int remain = q_size(head);
     char *tmp;
-    while (remain > 0) {
+    srand(time(NULL));
+    while (remain > 1) {
         int randnum;
         struct list_head *old = head->next;
         randnum = rand() % remain;
-        for (int i = 0; i < randnum - 1; i++) {
+        for (int i = 0; i < randnum; i++) {
             old = old->next;
         }
         element_t *oldnode =
