@@ -78,21 +78,26 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
     if (head && !list_empty(head)) {
         element_t *removed_element = list_first_entry(head, element_t, list);
-        strncpy(sp, removed_element->value, bufsize - 1);
-        sp[bufsize - 1] = '\0';
+        if (sp) {
+            strncpy(sp, removed_element->value, bufsize - 1);
+            sp[bufsize - 1] = '\0';
+        }
         list_del(&removed_element->list);
         return removed_element;
     }
     return NULL;
 }
 
+
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     if (head && !list_empty(head)) {
         element_t *removed_element = list_last_entry(head, element_t, list);
-        strncpy(sp, removed_element->value, bufsize - 1);
-        sp[bufsize - 1] = '\0';
+        if (sp) {
+            strncpy(sp, removed_element->value, bufsize - 1);
+            sp[bufsize - 1] = '\0';
+        }
         list_del(&removed_element->list);
         return removed_element;
     }
