@@ -168,9 +168,15 @@ static bool doit(int mode)
 
     bool ret = measure(before_ticks, after_ticks, input_data, mode);
     differentiate(exec_times, before_ticks, after_ticks);
-    prepare_percentiles(exec_times, percentiles);
-    update_statistics(exec_times, percentiles, classes);
-    ret &= report();
+    bool first_time = percentiles[DUDECT_NUMBER_PERCENTILES - 1] == 0;
+    if (first_time) {
+        // throw away the first batch of measurements.
+        // this helps warming things up.
+        prepare_percentiles(exec_times, percentiles);
+    } else {
+        update_statistics(exec_times, percentiles, classes);
+        ret &= report();
+    }
 
     free(before_ticks);
     free(after_ticks);
