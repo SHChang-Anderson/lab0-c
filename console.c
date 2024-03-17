@@ -12,6 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "agents/mcts.h"
 #include "console.h"
 #include "game.h"
 #include "report.h"
@@ -501,7 +502,7 @@ static bool do_ttt(int argc, char *argv[])
     char table[N_GRIDS];
     memset(table, ' ', N_GRIDS);
     char turn = 'X';
-    // char ai = 'O';
+    char ai = 'O';
 
     while (1) {
         char win = check_win(table);
@@ -514,19 +515,26 @@ static bool do_ttt(int argc, char *argv[])
             printf("%c won!\n", win);
             break;
         }
-
-        draw_board(table);
-        int move;
-        while (1) {
-            move = get_input(turn);
-            if (table[move] == ' ') {
-                break;
+        if (turn == ai) {
+            int move = mcts(table, ai);
+            if (move != -1) {
+                table[move] = ai;
+                record_move(move);
             }
-            printf("Invalid operation: the position has been marked\n");
-        }
-        table[move] = turn;
-        record_move(move);
+        } else {
+            draw_board(table);
+            int move;
+            while (1) {
+                move = get_input(turn);
+                if (table[move] == ' ') {
+                    break;
+                }
+                printf("Invalid operation: the position has been marked\n");
+            }
+            table[move] = turn;
 
+            record_move(move);
+        }
         turn = turn == 'X' ? 'O' : 'X';
     }
     print_moves();
