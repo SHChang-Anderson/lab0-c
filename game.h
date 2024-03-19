@@ -1,5 +1,3 @@
-#ifndef GAME_H
-#define GAME_H
 #pragma once
 
 #define BOARD_SIZE 4
@@ -19,11 +17,13 @@ typedef struct {
     int i_lower_bound, j_lower_bound, i_upper_bound, j_upper_bound;
 } line_t;
 
+/* Self-defined fixed-point type, using last 10 bits as fractional bits,
+ * starting from lsb */
+#define FIXED_SCALE_BITS 15
+
 extern const line_t lines[4];
 
 int *available_moves(const char *table);
 char check_win(char *t);
-double calculate_win_value(char win, char player);
+unsigned long calculate_win_value(char win, char player);
 void draw_board(const char *t);
-
-#endif

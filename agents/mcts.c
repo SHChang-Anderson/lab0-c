@@ -12,10 +12,39 @@ struct node {
     int move;
     char player;
     int n_visits;
-    double score;
+    unsigned long score;
     struct node *parent;
     struct node *children[N_GRIDS];
 };
+
+unsigned long fixed_mul(unsigned long a, unsigned long b)
+{
+    unsigned long long tmp = (unsigned long long) a * b;
+    return (unsigned long) ((tmp + (1U << (FIXED_SCALE_BITS - 1))) >>
+                            FIXED_SCALE_BITS);
+}
+
+unsigned long fixed_div(unsigned long a, unsigned long b)
+{
+    unsigned long long tmp = ((unsigned long long) a << FIXED_SCALE_BITS) / b;
+    return (unsigned long) tmp;
+}
+
+
+unsigned long sqrt_fix(unsigned long num)
+{
+    unsigned long x = num;
+    unsigned long y = (x + 1);
+    y >>= 1;
+
+    while (y < x) {
+        x = y;
+        y = (x + fixed_div(num, x));
+        y >>= 1;
+    }
+
+    return x;
+}
 
 static struct node *new_node(int move, char player, struct node *parent)
 {
@@ -37,32 +66,51 @@ static void free_node(struct node *node)
     free(node);
 }
 
-static inline double uct_score(int n_total, int n_visits, double score)
+static inline unsigned long uct_score(int n_total,
+                                      int n_visits,
+                                      unsigned long score)
 {
     if (n_visits == 0)
-        return DBL_MAX;
-    return score / n_visits +
-           EXPLORATION_FACTOR * sqrt(log(n_total) / n_visits);
+        return ~0UL;
+
+    unsigned long n_visitsn = (unsigned long) n_visits;
+
+    n_visitsn <<= FIXED_SCALE_BITS;
+
+    unsigned long n_totaln = (unsigned long) n_total;
+    n_totaln <<= FIXED_SCALE_BITS;
+    n_totaln = log(n_totaln);
+    unsigned long tmp =
+        fixed_mul(256, sqrt_fix(fixed_div(n_totaln, n_visitsn)));
+    return fixed_div(score, n_visitsn) + tmp;
 }
 
 static struct node *select_move(struct node *node)
 {
     struct node *best_node = NULL;
-    double best_score = -1;
+    unsigned long best_score = 0UL;
     for (int i = 0; i < N_GRIDS; i++) {
         if (!node->children[i])
             continue;
-        double score = uct_score(node->n_visits, node->children[i]->n_visits,
-                                 node->children[i]->score);
+        unsigned long score =
+            uct_score(node->n_visits, node->children[i]->n_visits,
+                      node->children[i]->score);
         if (score > best_score) {
             best_score = score;
             best_node = node->children[i];
         }
     }
+    if (!best_node) {
+        while (1) {
+            best_node = node->children[rand() % N_GRIDS];
+            if (best_node)
+                break;
+        }
+    }
     return best_node;
 }
 
-static double simulate(char *table, char player)
+static unsigned long simulate(char *table, char player)
 {
     char current_player = player;
     char temp_table[N_GRIDS];
@@ -84,10 +132,10 @@ static double simulate(char *table, char player)
             return calculate_win_value(win, player);
         current_player ^= 'O' ^ 'X';
     }
-    return 0.5;
+    return ((unsigned long) 1UL << (FIXED_SCALE_BITS - 1));
 }
 
-static void backpropagate(struct node *node, double score)
+static void backpropagate(struct node *node, unsigned long score)
 {
     while (node) {
         node->n_visits++;
@@ -119,13 +167,13 @@ int mcts(char *table, char player)
         memcpy(temp_table, table, N_GRIDS);
         while (1) {
             if ((win = check_win(temp_table)) != ' ') {
-                double score =
+                unsigned long score =
                     calculate_win_value(win, node->player ^ 'O' ^ 'X');
                 backpropagate(node, score);
                 break;
             }
             if (node->n_visits == 0) {
-                double score = simulate(temp_table, node->player);
+                unsigned long score = simulate(temp_table, node->player);
                 backpropagate(node, score);
                 break;
             }
@@ -144,9 +192,7 @@ int mcts(char *table, char player)
             best_node = root->children[i];
         }
     }
-    int best_move = -1;
-    if (best_node)
-        best_move = best_node->move;
+    int best_move = best_node->move;
     free_node(root);
     return best_move;
 }
