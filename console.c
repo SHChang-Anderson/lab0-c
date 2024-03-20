@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "agents/mcts.h"
+#include "agents/negamax.h"
 #include "console.h"
 #include "game.h"
 #include "report.h"
@@ -21,6 +22,7 @@
 /* Some global values */
 int simulation = 0;
 int show_entropy = 0;
+int cvc = 0;
 static cmd_element_t *cmd_list = NULL;
 static param_element_t *param_list = NULL;
 static bool block_flag = false;
@@ -168,6 +170,22 @@ static void record_error()
         report(1, "Error limit exceeded.  Stopping command execution");
         quit_flag = true;
     }
+}
+
+void display_current_time()
+{
+    time_t current_time;
+    struct tm *time_info;
+    char time_string[80];
+
+    current_time = time(NULL);
+
+    time_info = localtime(&current_time);
+
+    strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", time_info);
+
+    printf("Current Time: %s\r\n", time_string);
+    fflush(stdout);
 }
 
 /* Execute a command that has already been split into arguments */
@@ -503,8 +521,14 @@ static bool do_ttt(int argc, char *argv[])
     memset(table, ' ', N_GRIDS);
     char turn = 'X';
     char ai = 'O';
-
+    if (cvc)
+        negamax_init();
     while (1) {
+        if (cvc) {
+            draw_board(table);
+            display_current_time();
+        }
+
         char win = check_win(table);
         if (win == 'D') {
             draw_board(table);
@@ -519,6 +543,12 @@ static bool do_ttt(int argc, char *argv[])
             int move = mcts(table, ai);
             if (move != -1) {
                 table[move] = ai;
+                record_move(move);
+            }
+        } else if (cvc) {
+            int move = negamax_predict(table, ai).move;
+            if (move != -1) {
+                table[move] = turn;
                 record_move(move);
             }
         } else {
@@ -566,7 +596,7 @@ void init_cmd()
     add_param("error", &err_limit, "Number of errors until exit", NULL);
     add_param("echo", &echo, "Do/don't echo commands", NULL);
     add_param("entropy", &show_entropy, "Show/Hide Shannon entropy", NULL);
-
+    add_param("CvC", &cvc, "Active Computer vs. Computer mode", NULL);
     init_in();
     init_time(&last_time);
     first_time = last_time;
