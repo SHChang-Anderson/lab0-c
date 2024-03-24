@@ -30,6 +30,28 @@ unsigned long fixed_div(unsigned long a, unsigned long b)
     return (unsigned long) tmp;
 }
 
+unsigned long fixed_log(unsigned long x)
+{
+    unsigned long x_plus_1 = x + (1U << FIXED_SCALE_BITS);
+    unsigned long x_minus_1 = x - (1U << FIXED_SCALE_BITS);
+    unsigned long denominator = fixed_div(x_minus_1, x_plus_1);
+    unsigned long result = 1U << FIXED_SCALE_BITS;
+    unsigned long ratio = fixed_mul(denominator, denominator);
+    unsigned long k = 1;
+
+    while (1) {
+        unsigned long term =
+            fixed_div(ratio, ((2 * k + 1) << FIXED_SCALE_BITS));
+        if (k > 10)
+            break;
+        result += term;
+        ratio = fixed_mul(ratio, ratio);
+        k++;
+    }
+
+    result <<= 1;
+    return fixed_mul(result, denominator);
+}
 
 unsigned long sqrt_fix(unsigned long num)
 {
@@ -79,7 +101,7 @@ static inline unsigned long uct_score(int n_total,
 
     unsigned long n_totaln = (unsigned long) n_total;
     n_totaln <<= FIXED_SCALE_BITS;
-    n_totaln = log(n_totaln);
+    n_totaln = fixed_log(n_totaln);
     unsigned long tmp =
         fixed_mul(256, sqrt_fix(fixed_div(n_totaln, n_visitsn)));
     return fixed_div(score, n_visitsn) + tmp;
