@@ -15,9 +15,12 @@ CPPCHECK_suppresses="--inline-suppr harness.c \
 --suppress=nullPointer:queue.c \
 --suppress=nullPointer:qtest.c \
 --suppress=nullPointer:zobrist.c \
+--suppress=nullPointer:corottt.c \
 --suppress=returnDanglingLifetime:report.c \
 --suppress=constParameterCallback:console.c \
---suppress=constParameterPointer:console.c"
+--suppress=constParameterPointer:console.c" 
+
+
 CPPCHECK_OPTS="-I. --enable=all --error-exitcode=1 --force $CPPCHECK_suppresses $CPPCHECK_unmatched ."
 
 RETURN=0

@@ -48,7 +48,8 @@ OBJS := qtest.o report.o console.o harness.o queue.o \
 		game.o \
 		mt19937-64.o \
 		zobrist.o \
-		agents/negamax.o
+		agents/negamax.o \
+		corottt.o 
 
 deps := $(OBJS:%.o=.%.o.d)
 
